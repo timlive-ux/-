@@ -87,14 +87,6 @@
     return el ? el.value.trim() : '';
   }
 
-  /* «1:25 — Первая тема» → { t: '1:25', title: 'Первая тема' }; строки без времени пропускаем */
-  function parseCodes(text) {
-    return text.split('\n').map(function (line) {
-      var m = line.match(/^\s*(\d{1,2}(?::\d{2}){1,2})\s*[-–—|.:)]?\s*(.+)$/);
-      return m ? { t: m[1], title: m[2].trim() } : null;
-    }).filter(Boolean);
-  }
-
   /* ============================================================
      ФОРМА: ВИДЕО
      ============================================================ */
@@ -111,10 +103,6 @@
     h += field('Описание', 'desc', v.desc, { type: 'textarea', ph: 'Пара строк о чём видео' });
     h += field('Модуль курса', 'module', v.module, { type: 'select', options: mods });
     h += field('Длительность', 'duration', v.duration, { ph: '12:40', hint: 'Необязательно — показывается на обложке' });
-    h += field('Таймкоды', 'timecodes', App.codesText(v.timecodes), {
-      type: 'textarea', big: true, ph: '0:00 Вступление\n1:25 Первая тема\n4:10 Итоги',
-      hint: 'Каждый с новой строки: время и название. Для глав на YouTube первый — 0:00, всего от трёх.'
-    });
     h += '<div class="btn-row"><button class="btn btn-gold" data-save="video">Сохранить</button></div>';
 
     open(isNew ? 'Новое видео' : 'Видео', h);
@@ -128,7 +116,6 @@
       v.desc = val('desc');
       v.module = val('module');
       v.duration = val('duration');
-      v.timecodes = parseCodes(val('timecodes'));
       if (isNew) {
         Store.data.videos = Store.data.videos || [];
         Store.data.videos.push(v);
