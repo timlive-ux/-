@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "updatedAt": "",
   "meta": {
     "title": "Пронин Learn",
@@ -215,12 +215,13 @@
   ],
   "videos": [
     {
-      "id": "v1",
-      "title": "Пример: как вставить видео",
-      "desc": "Нажми ⚙️ → Видео → Добавить и вставь ссылку с YouTube. Эту карточку потом удали.",
-      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "module": "m1",
-      "duration": ""
+      "id": "v-solntse",
+      "title": "Непобедимое солнце 1:1. Как меня формировало детство",
+      "desc": "Андрей Зюняев",
+      "url": "https://youtu.be/8CeUuxUjAno",
+      "module": "",
+      "duration": "",
+      "timecodes": []
     }
   ],
   "materials": [

@@ -74,6 +74,24 @@
   }
   App.ytId = ytId;
 
+  /* таймкод «1:02:03» / «12:40» → секунды */
+  function tcSec(t) {
+    return String(t || '').split(':').reduce(function (acc, p) { return acc * 60 + (+p || 0); }, 0);
+  }
+
+  /* таймкоды текстом — как для описания на YouTube */
+  function codesText(list) {
+    return (list || []).map(function (c) { return c.t + ' ' + c.title; }).join('\n');
+  }
+  App.codesText = codesText;
+
+  function player(id, start) {
+    return '<div class="vthumb"><iframe src="https://www.youtube-nocookie.com/embed/' +
+      esc(id) + '?autoplay=1&rel=0&playsinline=1' + (start ? '&start=' + start : '') +
+      '" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" ' +
+      'allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
+  }
+
   function hostOf(url) {
     try { return new URL(url).hostname.replace(/^www\./, ''); }
     catch (e) { return String(url || '').replace(/^https?:\/\//, '').split('/')[0]; }
@@ -231,7 +249,7 @@
     list.forEach(function (v) {
       var id = ytId(v.url);
       var mod = (Store.data.modules || []).filter(function (m) { return m.id === v.module; })[0];
-      h += '<div class="vcard" data-video="' + esc(v.id) + '">';
+      h += '<div class="vcard" data-video="' + esc(v.id) + '" data-yt="' + esc(id) + '">';
       if (id) {
         h += '<button class="vthumb" type="button" data-play="' + esc(id) + '">' +
              '<img loading="lazy" src="https://i.ytimg.com/vi/' + esc(id) + '/hqdefault.jpg" alt="">' +
@@ -246,6 +264,14 @@
       if (mod) h += '<div class="vmod">Модуль ' + esc(mod.num || '') + ' · ' + esc(mod.name || '') + '</div>';
       h += '<div class="vtitle">' + esc(v.title || 'Без названия') + '</div>';
       if (v.desc) h += '<p class="vdesc">' + esc(v.desc) + '</p>';
+      if (v.timecodes && v.timecodes.length) {
+        h += '<details class="vcodes"><summary>Таймкоды · ' + v.timecodes.length + '</summary><ol>';
+        v.timecodes.forEach(function (c) {
+          h += '<li><button type="button" data-seek="' + tcSec(c.t) + '">' +
+               '<span class="vc-t">' + esc(c.t) + '</span><span class="vc-n">' + esc(c.title) + '</span></button></li>';
+        });
+        h += '</ol><button class="mini" type="button" data-copy-codes="' + esc(v.id) + '">Скопировать для YouTube</button></details>';
+      }
       h += '</div>';
       if (App.admin) {
         h += '<div class="edit-row">' +
@@ -343,11 +369,29 @@
     /* запуск youtube */
     var play = e.target.closest('[data-play]');
     if (play) {
-      var vid = play.dataset.play;
-      play.outerHTML = '<div class="vthumb"><iframe src="https://www.youtube-nocookie.com/embed/' +
-        esc(vid) + '?autoplay=1&rel=0&playsinline=1" allow="accelerometer; autoplay; encrypted-media; ' +
-        'gyroscope; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
+      play.outerHTML = player(play.dataset.play);
       haptic();
+      return;
+    }
+
+    /* таймкод: запустить видео с нужной секунды */
+    var seek = e.target.closest('[data-seek]');
+    if (seek) {
+      var card = seek.closest('.vcard');
+      if (!card.dataset.yt) return;
+      card.querySelector('.vthumb').outerHTML = player(card.dataset.yt, +seek.dataset.seek);
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      haptic();
+      return;
+    }
+
+    /* скопировать таймкоды для описания на YouTube */
+    var cc = e.target.closest('[data-copy-codes]');
+    if (cc) {
+      var vv = (Store.data.videos || []).filter(function (x) { return x.id === cc.dataset.copyCodes; })[0];
+      copyText(codesText(vv && vv.timecodes))
+        .then(function () { toast('Таймкоды скопированы'); })
+        .catch(function () { toast('Не получилось скопировать', 'err'); });
       return;
     }
 
